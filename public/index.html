@@ -1,0 +1,36 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Kick Mod</title><link rel="stylesheet" href="/styles.css"></head><body>
+<div class="kick-shell">
+  <header class="topbar">
+    <div class="logo">KICK<small>BETA</small></div><div class="topicons"><span>▣</span><span>♡</span><span>⌕</span><span class="avatar">K</span></div>
+  </header>
+  <main class="feed"><div class="fake-card"></div><div class="fake-card"></div><div class="fake-card wide"></div><div class="fake-card wide"></div></main>
+  <button id="master" class="master on">تشغيل</button>
+  <button id="masterGear" class="master-gear">⚙</button>
+
+  <section id="panel" class="panel hidden">
+    <div class="tabs"><button class="tab active" data-tab="bots">🤖 البوتات</button><button class="tab" data-tab="chat">💬 الشات</button><button class="tab" data-tab="more">⚙️ المزيد</button><button id="closePanel" class="dots">⋮</button></div>
+    <div id="botsView" class="view">
+      <div class="panel-title">إعدادات توكن 🔑</div>
+      <div class="toolbar"><button id="addAccount" class="green">＋ إضافة</button><button id="checkTokens" class="iconbtn">🕵️‍♂️</button><span class="section-label">حسابات البوتات</span></div>
+      <div class="hr"></div>
+      <div class="check-head"><label><input id="selectAll" type="checkbox"> <span>الاسم</span></label><span>إجراءات</span></div>
+      <div id="accounts"></div>
+      <button id="runAll" class="green widebtn">▶ تشغيل المحدد (24/7)</button>
+    </div>
+    <div id="chatView" class="view hidden"></div>
+    <div id="moreView" class="view hidden"><div class="panel-title">المزيد ⚙️</div><div class="rowline"><span>الفاصل بين الحسابات</span><input id="accountDelay" type="number" min="1" value="10"><span>ثانية</span></div><button id="backupBtn" class="darkbtn">💾 حفظ / استعادة</button><div class="smallnote">قراءة حالة القنوات تتجدد كل 45 ثانية.</div></div>
+  </section>
+
+  <section id="channelPanel" class="panel hidden channel-panel">
+    <div class="channel-head"><button id="closeChannel" class="close">×</button><strong id="channelTitle">إدارة القناة</strong></div>
+    <div class="channel-search"><input id="channelSearch" placeholder="ابحث أو أضف قناة (Slug)..."><button id="addChannel" class="green">إضافة</button></div>
+    <div class="filters"><button class="active" id="allFilter">الكل (0)</button><button id="liveFilter">مباشر (0)</button><button id="offFilter">مغلق (0)</button></div>
+    <div id="channelList"></div>
+  </section>
+
+  <section id="msgModal" class="modal hidden"><div class="modalbox"><div class="modalhead"><button class="close" data-close>×</button><strong id="msgModalTitle">إعدادات القناة</strong></div><textarea id="messages" placeholder="الرسائل (كل سطر رسالة)..."></textarea><div class="two"><label>العدد<input id="msgCount" type="number" value="10"></label><label>تأخير ثابت (ثانية)<input id="msgDelay" type="number" value="300"></label></div><label class="toggleRow"><span>رسائل عشوائية 🛠️</span><input id="randomMessages" type="checkbox"></label><div class="randomBox"><label>تأخير عشوائي 🎲<input id="randomDelay" type="checkbox"></label><div class="two"><label>من (ث)<input id="fromDelay" type="number" value="300"></label><label>إلى (ث)<input id="toDelay" type="number" value="900"></label></div></div><label class="toggleRow"><span>تكرار لا نهائي ♾️</span><input id="repeat" type="checkbox"></label><div class="actions"><button class="darkbtn" data-close>إلغاء</button><button id="saveChannel" class="green">حفظ</button></div></div></section>
+
+  <section id="accountModal" class="modal hidden"><div class="modalbox"><div class="modalhead"><button class="close" data-close>×</button><strong>إضافة حساب</strong></div><div class="smallnote">الطريقة الموصى بها: تسجيل الدخول عبر OAuth الرسمي. يمكنك أيضًا لصق Access/Refresh Token تم الحصول عليهما بشكل مشروع.</div><button id="oauthBtn" class="green widebtn">تسجيل دخول Kick عبر OAuth 2.1</button><input id="accessToken" placeholder="Access Token"><input id="refreshToken" placeholder="Refresh Token"><button id="saveToken" class="green widebtn">حفظ التوكن</button></div></section>
+  <section id="backupModal" class="modal hidden"><div class="modalbox"><div class="modalhead"><button class="close" data-close>×</button><strong>حفظ / استعادة</strong></div><label>كلمة مرور التصدير<input id="backupPassword" type="password"></label><div class="two"><button id="exportBtn" class="green">نسخ الكود</button><button id="importBtn" class="darkbtn">لصق واستعادة</button></div><textarea id="backupCode" placeholder="الكود..."></textarea></div></section>
+  <div id="toast" class="toast"></div>
+</div><script src="/app.js"></script></body></html>
