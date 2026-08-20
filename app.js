@@ -15,6 +15,14 @@ const STORE='kickmod-static-v1';
 let state={accounts:[], settings:{staggerSeconds:5}, running:false, selected:{}, currentAccountId:null, currentChannelId:null};
 let statusTimer=null, schedulerTimer=null;
 const $=s=>document.querySelector(s);
+
+function togglePanel(){
+  const panel=document.getElementById('dashboard');
+  if(!panel) return;
+  const opening=panel.classList.contains('hidden-panel');
+  panel.classList.toggle('hidden-panel',!opening);
+  panel.setAttribute('aria-hidden',String(!opening));
+}
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 const save=()=>localStorage.setItem(STORE,JSON.stringify(state));
 const loadStore=()=>{try{const x=JSON.parse(localStorage.getItem(STORE)||'{}');state={...state,...x,accounts:Array.isArray(x.accounts)?x.accounts:[]};}catch{}};
@@ -179,5 +187,5 @@ async function restoreBackup(){try{const p=$('#backupPass').value,c=$('#backupCo
 function openBackup(){openModal(`<button class="close" onclick="openMore()">×</button><h2>حفظ / استعادة</h2><div class="field"><label>كلمة المرور</label><input id="backupPass" type="password"></div><button class="green" onclick="makeBackup()">📋 إنشاء كود</button><div class="field"><textarea id="backupCode" placeholder="الصق كود النسخة هنا"></textarea></div><button class="green" onclick="restoreBackup()">استعادة البيانات</button>`)}
 function openRestore(){openBackup()}
 
-window.oauthStart=oauthStart;window.closeModal=closeModal;window.togglePower=togglePower;window.selectAll=selectAll;window.pickAccount=pickAccount;window.accountSettings=accountSettings;window.refreshToken=refreshToken;window.deleteAccount=deleteAccount;window.addChannel=addChannel;window.searchChannel=searchChannel;window.removeChannel=removeChannel;window.channelSettings=channelSettings;window.saveChannelSettings=saveChannelSettings;window.openExpired=openExpired;window.checkAllTokens=checkAllTokens;window.openMore=openMore;window.setStagger=setStagger;window.openBackup=openBackup;window.openRestore=openRestore;window.makeBackup=makeBackup;window.restoreBackup=restoreBackup;window.openAccounts=openAccounts;
+window.oauthStart=oauthStart;window.closeModal=closeModal;window.togglePower=togglePower;window.selectAll=selectAll;window.pickAccount=pickAccount;window.accountSettings=accountSettings;window.refreshToken=refreshToken;window.deleteAccount=deleteAccount;window.addChannel=addChannel;window.searchChannel=searchChannel;window.removeChannel=removeChannel;window.channelSettings=channelSettings;window.saveChannelSettings=saveChannelSettings;window.openExpired=openExpired;window.checkAllTokens=checkAllTokens;window.openMore=openMore;window.setStagger=setStagger;window.openBackup=openBackup;window.openRestore=openRestore;window.makeBackup=makeBackup;window.restoreBackup=restoreBackup;window.openAccounts=openAccounts;window.togglePanel=togglePanel;
 load().catch(e=>alert('خطأ في تشغيل Kick Mod: '+e.message));
