@@ -28,7 +28,7 @@
     </div>
   </div>
 
-  <!-- Compact controls only. The management panel is hidden on first load. -->
+  <!-- The controls float over the real Kick page. The panel is closed on first load. -->
   <div class="control-cluster">
     <button id="power" class="power off" onclick="togglePower()" aria-label="تشغيل">
       <span>تشغيل</span>
@@ -37,11 +37,10 @@
   </div>
 
   <div id="dashboard" class="dashboard hidden-panel" aria-hidden="true">
-    <div class="panel-handle" onclick="togglePanel()"></div>
     <div class="tabs">
-      <button class="tab active" type="button">🤖 <span>البوتات</span></button>
-      <button class="tab" type="button">💬 <span>الشات</span></button>
-      <button class="tab" type="button" onclick="openMore()">⚙ <span>المزيد</span></button>
+      <button class="tab active" type="button">🤖<span>البوتات</span></button>
+      <button class="tab" type="button">💬<span>الشات</span></button>
+      <button class="tab" type="button" onclick="openMore()">⚙<span>المزيد</span></button>
       <button class="more" type="button" onclick="openMore()">⋮</button>
     </div>
 
@@ -51,10 +50,7 @@
           <strong>حسابات البوتات</strong>
           <small>إدارة الحسابات والقنوات من هنا</small>
         </div>
-        <div class="section-actions">
-          <button class="icon-btn" onclick="openExpired()" title="فحص التوكنات">🕵️‍♂️</button>
-          <button class="add" onclick="oauthStart()">+ إضافة</button>
-        </div>
+        <button class="add" onclick="oauthStart()">+ إضافة</button>
       </div>
 
       <div class="check-all">
@@ -64,13 +60,9 @@
 
       <div id="accounts"></div>
 
-      <button class="run-all" onclick="togglePower()">▶ تشغيل المحدد</button>
+      <button class="run-all" onclick="togglePower()">تشغيل المحدد ▶</button>
     </div>
 
-    <div class="footer-row">
-      <span>v2.1 Static</span>
-      <button onclick="openRestore()">استعادة</button>
-    </div>
   </div>
 
   <div id="modal" class="modal hidden">
