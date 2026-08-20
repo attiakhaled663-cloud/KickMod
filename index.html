@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0b0b0b">
+<title>Kick Mod</title><link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+<header class="topbar"><div class="brand">KICK<span>MOD</span></div><div class="top-icons"><button onclick="openAccounts()">◉</button><button>♡</button><button onclick="openExpired()">⌕</button><button onclick="openMore()">◉</button></div></header>
+<button id="power" class="power off" onclick="togglePower()"><span>تشغيل</span></button><button class="floating-gear" onclick="openAccounts()">⚙</button>
+<main>
+<section class="hero"><div class="hero-card"><div class="skeleton"></div></div><div class="hero-card small"><div class="skeleton"></div></div></section>
+<section class="dashboard"><div class="tabs"><button class="tab active">🤖 البوتات</button><button class="tab">💬 الشات</button><button class="tab" onclick="openMore()">⚙ المزيد</button><button class="more" onclick="openMore()">⋮</button></div>
+<div class="dash-body"><button class="wide-setting" onclick="openMore()">⚙️ إعدادات التشغيل</button><div class="section-head"><span>حسابات البوتات</span><div><button class="search" onclick="openExpired()">🕵️‍♂️</button><button class="add" onclick="oauthStart()">+ إضافة</button></div></div>
+<div class="check-all"><label><input id="checkAll" type="checkbox" onchange="selectAll(this.checked)"> الاسم</label><span>إجراءات</span></div><div id="accounts"></div><button class="run-all" onclick="togglePower()">▶ تشغيل المحدد</button></div>
+<div class="footer-row"><button onclick="openRestore()">استعادة</button><span>v2.0 Static</span></div></section>
+<section class="categories"><div><span>تصنيفات</span> مخصصة لك</div><div class="category-cards"><div></div><div></div><div></div></div></section>
+</main><div id="modal" class="modal hidden"><div class="sheet" id="sheet"></div></div><script src="./app.js"></script>
+</body></html>
