@@ -1,74 +1,18 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#070707">
-<title>Kick Mod</title>
-<link rel="stylesheet" href="./styles.css">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0b0b0b">
+<title>Kick Mod</title><link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-  <!-- The actual page underneath the controls. When this project is used in an
-       Android WebView wrapper, the wrapper can point its main WebView at kick.com.
-       The iframe below is only the static-site fallback/preview. Kick may block
-       framing in normal browsers via its security headers. -->
-  <div id="kick-webview" aria-label="Kick.com">
-    <iframe
-      id="kick-frame"
-      src="https://kick.com/"
-      title="Kick.com"
-      allow="autoplay; fullscreen; picture-in-picture"
-      referrerpolicy="strict-origin-when-cross-origin"></iframe>
-    <div class="kick-fallback">
-      <div class="fallback-card">
-        <b>Kick.com</b>
-        <span>لو Kick منع العرض داخل iframe في المتصفح، افتح المشروع داخل WebView حقيقي واجعل Kick.com هو الصفحة الأساسية.</span>
-        <a href="https://kick.com/" target="_blank" rel="noopener">فتح Kick.com</a>
-      </div>
-    </div>
-  </div>
-
-  <!-- The controls float over the real Kick page. The panel is closed on first load. -->
-  <div class="control-cluster">
-    <button id="power" class="power off" onclick="togglePower()" aria-label="تشغيل">
-      <span>تشغيل</span>
-    </button>
-    <button class="floating-gear" onclick="togglePanel()" aria-label="فتح قائمة Kick Mod">⚙</button>
-  </div>
-
-  <div id="dashboard" class="dashboard hidden-panel" aria-hidden="true">
-    <div class="tabs">
-      <button class="tab active" type="button">🤖<span>البوتات</span></button>
-      <button class="tab" type="button">💬<span>الشات</span></button>
-      <button class="tab" type="button" onclick="openMore()">⚙<span>المزيد</span></button>
-      <button class="more" type="button" onclick="openMore()">⋮</button>
-    </div>
-
-    <div class="dash-body">
-      <div class="section-head">
-        <div class="title-wrap">
-          <strong>حسابات البوتات</strong>
-          <small>إدارة الحسابات والقنوات من هنا</small>
-        </div>
-        <button class="add" onclick="oauthStart()">+ إضافة</button>
-      </div>
-
-      <div class="check-all">
-        <label><input id="checkAll" type="checkbox" onchange="selectAll(this.checked)"> الاسم</label>
-        <span>إجراءات</span>
-      </div>
-
-      <div id="accounts"></div>
-
-      <button class="run-all" onclick="togglePower()">تشغيل المحدد ▶</button>
-    </div>
-
-  </div>
-
-  <div id="modal" class="modal hidden">
-    <div class="sheet" id="sheet"></div>
-  </div>
-
-  <script src="./app.js"></script>
-</body>
-</html>
+<header class="topbar"><div class="brand">KICK<span>MOD</span></div><div class="top-icons"><button onclick="openAccounts()">◉</button><button>♡</button><button onclick="openExpired()">⌕</button><button onclick="openMore()">◉</button></div></header>
+<button id="power" class="power off" onclick="togglePower()"><span>تشغيل</span></button><button class="floating-gear" onclick="openAccounts()">⚙</button>
+<main>
+<section class="hero"><div class="hero-card"><div class="skeleton"></div></div><div class="hero-card small"><div class="skeleton"></div></div></section>
+<section class="dashboard"><div class="tabs"><button class="tab active">🤖 البوتات</button><button class="tab">💬 الشات</button><button class="tab" onclick="openMore()">⚙ المزيد</button><button class="more" onclick="openMore()">⋮</button></div>
+<div class="dash-body"><button class="wide-setting" onclick="openMore()">⚙️ إعدادات التشغيل</button><div class="section-head"><span>حسابات البوتات</span><div><button class="search" onclick="openExpired()">🕵️‍♂️</button><button class="add" onclick="oauthStart()">+ إضافة</button></div></div>
+<div class="check-all"><label><input id="checkAll" type="checkbox" onchange="selectAll(this.checked)"> الاسم</label><span>إجراءات</span></div><div id="accounts"></div><button class="run-all" onclick="togglePower()">▶ تشغيل المحدد</button></div>
+<div class="footer-row"><button onclick="openRestore()">استعادة</button><span>v2.0 Static</span></div></section>
+<section class="categories"><div><span>تصنيفات</span> مخصصة لك</div><div class="category-cards"><div></div><div></div><div></div></div></section>
+</main><div id="modal" class="modal hidden"><div class="sheet" id="sheet"></div></div><script src="./app.js"></script>
+</body></html>

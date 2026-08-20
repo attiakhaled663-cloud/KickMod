@@ -15,14 +15,6 @@ const STORE='kickmod-static-v1';
 let state={accounts:[], settings:{staggerSeconds:5}, running:false, selected:{}, currentAccountId:null, currentChannelId:null};
 let statusTimer=null, schedulerTimer=null;
 const $=s=>document.querySelector(s);
-
-function togglePanel(){
-  const panel=document.getElementById('dashboard');
-  if(!panel) return;
-  const opening=panel.classList.contains('hidden-panel');
-  panel.classList.toggle('hidden-panel',!opening);
-  panel.setAttribute('aria-hidden',String(!opening));
-}
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 const save=()=>localStorage.setItem(STORE,JSON.stringify(state));
 const loadStore=()=>{try{const x=JSON.parse(localStorage.getItem(STORE)||'{}');state={...state,...x,accounts:Array.isArray(x.accounts)?x.accounts:[]};}catch{}};
@@ -176,7 +168,7 @@ function openExpired(){
   openModal(`<button class="close" onclick="closeModal()">×</button><h2>فحص التوكنات 🕵️‍♂️</h2><p>سيتم فحص كل الحسابات عبر Kick OAuth.</p><button class="green" onclick="checkAllTokens()">فحص الآن</button><div id="token-results"></div>`)
 }
 async function checkAllTokens(){const out=$('#token-results');out.innerHTML='جاري الفحص...';for(const a of state.accounts)await inspectToken(a);out.innerHTML=state.accounts.map(a=>`<div class="channel"><div class="grow">${esc(a.username)}</div><span class="${a.status==='صالح'?'live':'bad'}">${esc(a.status)}</span></div>`).join('');render()}
-function openMore(){openModal(`<button class="close" onclick="closeModal()">×</button><h2>المزيد ⚙️</h2><div class="field"><label>الفاصل بين بدء الحسابات (ثانية)</label><input id="stagger" type="number" min="1" value="${Number(state.settings.staggerSeconds||5)}"></div><button class="green" onclick="setStagger()">حفظ</button><hr><button class="green" onclick="openBackup()">💾 حفظ / استعادة البيانات</button>`)}
+function openMore(){openModal(`<button class="close" onclick="closeModal()">×</button><h2>المزيد ⚙️</h2><div class="field"><label>الفاصل بين بدء الحسابات (ثانية)</label><input id="stagger" type="number" min="1" value="${Number(state.settings.staggerSeconds||5)}"></div><button class="green" onclick="setStagger()">حفظ</button><hr><button class="green" onclick="openBackup()">💾 حفظ / استعادة</button>`)}
 function setStagger(){state.settings.staggerSeconds=Math.max(1,Number($('#stagger').value)||5);save();alert('تم الحفظ')}
 
 async function deriveKey(password,salt){const base=await crypto.subtle.importKey('raw',new TextEncoder().encode(password),'PBKDF2',false,['deriveKey']);return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:120000,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}
@@ -187,5 +179,5 @@ async function restoreBackup(){try{const p=$('#backupPass').value,c=$('#backupCo
 function openBackup(){openModal(`<button class="close" onclick="openMore()">×</button><h2>حفظ / استعادة</h2><div class="field"><label>كلمة المرور</label><input id="backupPass" type="password"></div><button class="green" onclick="makeBackup()">📋 إنشاء كود</button><div class="field"><textarea id="backupCode" placeholder="الصق كود النسخة هنا"></textarea></div><button class="green" onclick="restoreBackup()">استعادة البيانات</button>`)}
 function openRestore(){openBackup()}
 
-window.oauthStart=oauthStart;window.closeModal=closeModal;window.togglePower=togglePower;window.selectAll=selectAll;window.pickAccount=pickAccount;window.accountSettings=accountSettings;window.refreshToken=refreshToken;window.deleteAccount=deleteAccount;window.addChannel=addChannel;window.searchChannel=searchChannel;window.removeChannel=removeChannel;window.channelSettings=channelSettings;window.saveChannelSettings=saveChannelSettings;window.openExpired=openExpired;window.checkAllTokens=checkAllTokens;window.openMore=openMore;window.setStagger=setStagger;window.openBackup=openBackup;window.openRestore=openRestore;window.makeBackup=makeBackup;window.restoreBackup=restoreBackup;window.openAccounts=openAccounts;window.togglePanel=togglePanel;
+window.oauthStart=oauthStart;window.closeModal=closeModal;window.togglePower=togglePower;window.selectAll=selectAll;window.pickAccount=pickAccount;window.accountSettings=accountSettings;window.refreshToken=refreshToken;window.deleteAccount=deleteAccount;window.addChannel=addChannel;window.searchChannel=searchChannel;window.removeChannel=removeChannel;window.channelSettings=channelSettings;window.saveChannelSettings=saveChannelSettings;window.openExpired=openExpired;window.checkAllTokens=checkAllTokens;window.openMore=openMore;window.setStagger=setStagger;window.openBackup=openBackup;window.openRestore=openRestore;window.makeBackup=makeBackup;window.restoreBackup=restoreBackup;window.openAccounts=openAccounts;
 load().catch(e=>alert('خطأ في تشغيل Kick Mod: '+e.message));
