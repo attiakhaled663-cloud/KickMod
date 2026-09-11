@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Android 14 Web Emulator</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#111;color:#fff;font-family:Arial;min-height:100vh;display:grid;place-items:center}
+.phone{width:min(390px,100vw);height:min(844px,100vh);background:#101322;border-radius:40px;overflow:hidden;position:relative;box-shadow:0 0 0 2px #333,0 20px 70px #000}
+.status{height:34px;padding:8px 16px;display:flex;justify-content:space-between;font-size:12px}.notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:110px;height:25px;background:#000;border-radius:0 0 17px 17px}
+.home{height:calc(100% - 92px);padding:60px 20px}.clock{text-align:center;font-size:50px}.date{text-align:center;color:#ccc;margin:5px}
+.grid{margin-top:55px;display:grid;grid-template-columns:repeat(4,1fr);gap:24px 10px}.app{background:none;border:0;color:#fff;font-size:11px}.ico{width:55px;height:55px;border-radius:16px;background:#292d40;display:grid;place-items:center;font-size:26px;margin:auto auto 6px}
+.panel{position:absolute;inset:34px 0 58px;background:#fff;color:#111;display:none;z-index:5}.panel iframe{width:100%;height:100%;border:0}.nav{position:absolute;bottom:0;left:0;right:0;height:58px;background:#050505dd;display:flex;justify-content:space-around;align-items:center;z-index:10}.nav button{background:none;border:0;color:#fff;font-size:25px;width:30%}
+#bar{position:absolute;z-index:20;top:40px;left:8px;right:8px;display:none;gap:5px}#bar input{flex:1;padding:10px;border:0;border-radius:9px;direction:ltr}#bar button{border:0;border-radius:9px;padding:0 13px}
+#msg{position:absolute;bottom:70px;left:10px;right:10px;padding:9px;background:#000d;border-radius:10px;text-align:center;font-size:12px;display:none;z-index:30}
+</style></head>
+<body><div class="phone"><div class="notch"></div><div class="status"><span id="time"></span><span>▮▮▮ Wi‑Fi 🔋</span></div>
+<div class="home"><div class="clock" id="clock"></div><div class="date" id="date"></div>
+<div class="grid"><button class="app" onclick="openApp()"><div class="ico">📦</div>APK</button><button class="app" onclick="browser()"><div class="ico">🌐</div>Browser</button><button class="app" onclick="wake()"><div class="ico">☀️</div>Wake</button><button class="app" onclick="full()"><div class="ico">⛶</div>Fullscreen</button></div></div>
+<div id="panel" class="panel"><iframe id="frame" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"></iframe></div>
+<div id="bar"><input id="url" placeholder="https://example.com"><button onclick="go()">فتح</button></div>
+<div id="msg"></div><div class="nav"><button onclick="back()">◀</button><button onclick="home()">●</button><button onclick="full()">▢</button></div></div>
+<script>
+let lock=null;
+function tick(){let d=new Date(),t=d.toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'});time.textContent=t;clock.textContent=t;date.textContent=d.toLocaleDateString('ar-EG',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}setInterval(tick,1000);tick();
+function msg(x){let e=document.querySelector('#msg');e.textContent=x;e.style.display='block';clearTimeout(window.m);window.m=setTimeout(()=>e.style.display='none',2500)}
+async function wake(){try{if(!('wakeLock'in navigator))return msg('المتصفح لا يدعم Wake Lock');lock=await navigator.wakeLock.request('screen');msg('تم إبقاء الشاشة مستيقظة')}catch(e){msg('تعذر تفعيل Wake Lock')}}
+document.addEventListener('visibilitychange',()=>document.visibilityState==='visible'&&wake());
+function openApp(){msg('مهم: HTML وحده لا يشغّل APK حقيقي. استخدمي Browser لتشغيل Web App.')}
+function browser(){panel.style.display='block';bar.style.display='flex';wake()}
+function go(){let u=url.value.trim();if(!u)return;if(!/^https?:\/\//i.test(u))u='https://'+u;frame.src=u;bar.style.display='none'}
+function home(){panel.style.display='none';bar.style.display='none'} function back(){try{frame.contentWindow.history.back()}catch(e){home()}}
+async function full(){try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch(e){}wake()}
+</script></body></html>
