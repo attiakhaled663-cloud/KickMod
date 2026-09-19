@@ -1273,7 +1273,7 @@ body {
         <div class="secondary-actions">
             <button class="btn btn-ghost btn-sm" onclick="selectAllBots()"><i class="fas fa-check-double"></i> تحديد الكل</button>
             <button class="btn btn-ghost btn-sm" onclick="clearSelection()" id="btnClearSel"><i class="fas fa-xmark"></i> مسح التحديد</button>
-            <button type="button" class="btn btn-ghost btn-sm" id="btnBottomAdd" onclick="goAddToken(); return false;"><i class="fas fa-plus"></i> إضافة</button>
+            <button class="btn btn-ghost btn-sm" onclick="goAddToken()"><i class="fas fa-plus"></i> إضافة</button>
         </div>
 
         <div class="progress-wrap" id="progWrap" style="display:none;margin-top:14px">
@@ -2047,9 +2047,7 @@ function generateTransferCode() {
             version: 3,
             timestamp: Date.now(),
             counter: accIdCounter, // ✅ للحفاظ على تسلسل المعرفات كما هو
-            bots: accounts.filter(function(b) {
-                return !b._builtin;
-            }).map(function(b) {
+            bots: accounts.map(function(b) {
                 return {
                     id: b.id, // ✅ نفس المعرف — يحافظ على نفس الترتيب والهوية بالضبط
                     token: b.token,
@@ -3072,37 +3070,10 @@ async function verifyAndAdd() {
 }
 
 function goAddToken() {
-    var tokenInput = $('inToken');
-    var tokenStatus = $('tokenStatus');
-    var main = $('ph-main');
-    var add = $('ph-add');
-
-    if (tokenInput) tokenInput.value = '';
-    if (tokenStatus) tokenStatus.innerHTML = '';
-
-    if (main && add) {
-        // فتح شاشة الإضافة مباشرةً بدون الاعتماد على حالة القائمة.
-        document.querySelectorAll('.phase').forEach(function(p){ p.classList.remove('active'); });
-        add.classList.add('active');
-        if (tokenInput) {
-            setTimeout(function(){
-                try { tokenInput.focus(); } catch(e) {}
-            }, 50);
-        }
-    }
+    $('inToken').value = '';
+    $('tokenStatus').innerHTML = '';
+    showPhase('add');
 }
-
-// حماية إضافية لزر «إضافة» الموجود أسفل القائمة.
-document.addEventListener('DOMContentLoaded', function(){
-    var addBtn = document.getElementById('btnBottomAdd');
-    if (addBtn) {
-        addBtn.addEventListener('click', function(e){
-            e.preventDefault();
-            e.stopPropagation();
-            goAddToken();
-        });
-    }
-});
 
 // ✅ العودة من صفحة إضافة بوت إلى قائمة البوتات
 function navBackFromAdd() {
@@ -3270,14 +3241,14 @@ async function doRenewToken() {
 // ═══════════════════════════════════════
 function renderBotList() {
     var box = $('botList');
-    if (accounts.filter(function(b){ return !b._builtin; }).length === 0) {
+    if (accounts.length === 0) {
         box.innerHTML = '<div class="bot-empty"><i class="fas fa-robot"></i>لا توجد بوتات<br><span style="font-size:11px">اضغط "إضافة" للبدء</span></div>';
         updateBulkUI();
+        return;
     }
     var html = '';
     for (var i = 0; i < accounts.length; i++) {
         var b = accounts[i];
-        if (b._builtin) continue; // الحسابات المدمجة مخفية من القائمة فقط
         var initial = (b.username || '?').charAt(0).toUpperCase();
         var isSelected = !!selectedBots[b.id];
         var statusText, dotClass;
@@ -3499,8 +3470,6 @@ async function mAddChannel() {
     var chatroomId = null;
     var lastReason = null;
 
-    // ✅ 6 محاولات شاملة (كل محاولة تجرب كل البروكسيات والـ endpoints)
-    // تأخير تصاعدي: 2s, 3s, 5s, 8s, 12s — يعطي البروكسيات وقتاً كافياً لإعادة الضبط
     var delays = [2000, 3000, 5000, 8000, 12000];
     for (var attempt = 1; attempt <= 6 && !chatroomId; attempt++) {
         var result = await verifyChannelComprehensive(slug, b);
@@ -3508,10 +3477,8 @@ async function mAddChannel() {
             chatroomId = result.chatroomId;
         } else {
             lastReason = result.reason;
-            // ✅ إذا القناة غير موجودة فعلاً، لا داعي لإعادة المحاولة
             if (lastReason === 'not_found') break;
             if (attempt < 6) {
-                // ✅ تأخير تصاعدي بين المحاولات للسماح بإعادة ضغط rate limits
                 await new Promise(function(r){ setTimeout(r, delays[attempt-1] || 12000); });
             }
         }
@@ -3521,21 +3488,58 @@ async function mAddChannel() {
     addBtn.innerHTML = oldHtml;
 
     if (chatroomId) {
-        // ✅ القناة موجودة ومتحقق منها — أضفها مع chatroom_id محفوظ
-        var channel = makeChannel(slug);
-        channel.chatroomId = chatroomId;
-        channel.verified = true;
-        b.channels.push(channel);
+        // ✅ ✅ ✅ التعديل الجديد: أضف القناة لكل الحسابات دفعة واحدة
+        var addedTo = 0, skipped = 0, failedCount = 0;
+
+        for (var i = 0; i < accounts.length; i++) {
+            var acc = accounts[i];
+
+            // ✅ تحقق من الحد الأقصى لكل حساب
+            if (acc.channels.length >= MAX_CHANNELS_PER_BOT) {
+                failedCount++;
+                continue;
+            }
+
+            // ✅ لو القناة موجودة عند الحساب ده، تجاهله
+            if (findChannel(acc, slug)) {
+                skipped++;
+                continue;
+            }
+
+            // ✅ أنشئ القناة بنفس الإعدادات لكل الحسابات
+            var channel = makeChannel(slug);
+            channel.chatroomId = chatroomId;
+            channel.verified = true;
+            acc.channels.push(channel);
+
+            // ✅ لو الحساب ده هو الحساب النشط، حدّث الواجهة
+            if (acc.id === activeModalBotId) {
+                // هيتم تحديث الواجهة بعد الحلقة
+            }
+            addedTo++;
+        }
+
         inp.value = '';
         inp.focus();
-        renderChannelsList(b);
+
+        // ✅ حفظ وإعادة عرض كل شيء
         persist();
-        toast('تمت إضافة القناة: ' + slug, 's');
+
+        // ✅ لو نافذة الإعدادات مفتوحة، أعد عرض قائمة القنوات للحساب النشط
+        var activeBot = findBot(activeModalBotId);
+        if (activeBot) renderChannelsList(activeBot);
+
+        renderBotList();
+
+        // ✅ رسالة نجاح واضحة
+        var msg = 'تمت إضافة القناة "' + slug + '" إلى ' + addedTo + ' حساب';
+        if (skipped > 0) msg += ' (موجودة مسبقاً في ' + skipped + ')';
+        if (failedCount > 0) msg += ' (فشل في ' + failedCount + ')';
+        toast(msg, 's');
+
     } else if (lastReason === 'not_found') {
-        // ✅ القناة غير موجودة فعلاً — أكدها كل البروكسيات بـ 404
         toast('القناة "' + slug + '" غير موجودة — تحقق من الاسم', 'e');
     } else {
-        // ✅ فشل الاتصال بكل البروكسيات بعد 6 محاولات
         toast('تعذّر التحقق من القناة بعد 6 محاولات — تحقق من الإنترنت وأعد المحاولة', 'e');
     }
 }
@@ -3877,9 +3881,10 @@ function saveChannelSettings() {
 //  تشغيل البوتات المحددة
 // ═══════════════════════════════════════
 // ✅ عدّاد تشغيل البوتات المتسلسل + حالة الإيقاف الإجباري
-// تشغيل البوتات المحددة مباشرةً بدون عدّاد أو تأخير 3 ثوانٍ
-var _forceStopAll = false;
-var _bulkRunActive = false;
+var _botStartQueue = [];          // قائمة البوتات المنتظرة للتشغيل
+var _botStartTimer = null;        // مؤقّت التأخير بين البوتات
+var _forceStopAll = false;        // علم الإيقاف الإجباري
+var _bulkRunActive = false;       // ✅ يصبح true بعد الضغط على "تشغيل المحددة" — أي بوت يتم تحديده بعدها يلتحق بالتشغيل تلقائياً
 
 async function startSelectedBots() {
     var toStart = [];
@@ -3887,20 +3892,21 @@ async function startSelectedBots() {
         if (selectedBots[id]) {
             var b = findBot(parseInt(id));
             if (b && !b.isSending) {
+                // ✅ إذا الإعدادات الموحدة الخاصة بهذا الحساب مفعّلة ولها رسائل — كل قنواته تعتبر صالحة
                 var bUnified = getBotUnified(b);
                 var unifiedReady = bUnified.enabled && bUnified.messages && bUnified.messages.trim();
                 var validChannels = 0;
-
                 if (unifiedReady) {
+                    // ✅ الإعدادات الموحدة — أي قناة مفعّلة تعتبر صالحة
                     for (var c = 0; c < b.channels.length; c++) {
                         if (b.channels[c].enabled !== false) validChannels++;
                     }
                 } else {
+                    // ✅ الإعدادات الموحدة معطّلة — تحقق من رسائل القناة
                     for (var c = 0; c < b.channels.length; c++) {
                         if (b.channels[c].messages && b.channels[c].messages.trim()) validChannels++;
                     }
                 }
-
                 if (b.channels.length === 0) {
                     toast('('+b.username+') لا توجد قنوات — تم التخطي', 'e');
                     continue;
@@ -3913,22 +3919,48 @@ async function startSelectedBots() {
             }
         }
     }
-
     if (toStart.length === 0) {
         toast('لا توجد بوتات صالحة للتشغيل', 'e');
         return;
     }
 
+    // ✅ إعادة ضبط حالة الإيقاف الإجباري + بناء قائمة الانتظار
     _forceStopAll = false;
-    _bulkRunActive = true;
+    _bulkRunActive = true; // ✅ تفعيل وضع "التشغيل الجماعي" — أي تحديد جديد بعد كده يلتحق بالتشغيل تلقائياً
+    _botStartQueue = toStart.slice();
+    toast('تشغيل ' + toStart.length + ' بوت (كل بوت بعد 3 ثوانٍ)', 's');
 
-    // تشغيل كل البوتات المحددة في نفس اللحظة، بدون انتظار 3 ثوانٍ بين الحسابات.
-    for (var i = 0; i < toStart.length; i++) {
-        if (_forceStopAll) break;
-        startBotLoop(toStart[i]).catch(function(){});
+    // ✅ شغّل البوت الأول فوراً
+    _startNextBotInQueue();
+}
+
+// ✅ تشغيل البوت التالي في قائمة الانتظار (مع تأخير 3 ثوانٍ)
+function _startNextBotInQueue() {
+    // ✅ تحقق من الإيقاف الإجباري
+    if (_forceStopAll) {
+        _botStartQueue = [];
+        _botStartTimer = null;
+        return;
     }
-
-    toast('تم تشغيل ' + toStart.length + ' بوت بدون تأخير بين الحسابات', 's');
+    // ✅ إذا القائمة فارغة، انتهى التشغيل
+    if (_botStartQueue.length === 0) {
+        _botStartTimer = null;
+        return;
+    }
+    // ✅ خذ البوت التالي وشغّله
+    var bot = _botStartQueue.shift();
+    if (bot && !bot.isSending) {
+        startBotLoop(bot).catch(function(){});
+    }
+    // ✅ إذا يوجد بوت تالي، انتظر 3 ثوانٍ ثم شغّله
+    if (_botStartQueue.length > 0 && !_forceStopAll) {
+        _botStartTimer = setTimeout(function() {
+            _botStartTimer = null;
+            _startNextBotInQueue();
+        }, 3000);
+    } else {
+        _botStartTimer = null;
+    }
 }
 
 // ✅ عند تحديد بوت جديد أثناء نشاط وضع "التشغيل الجماعي" — يلتحق بالتشغيل فوراً بدون داعي للضغط على تشغيل المحددة تاني
@@ -4628,131 +4660,6 @@ function showNet(type, text, hideAfter) {
     draw();
 })();
 
-
-// ═══════════════════════════════════════
-//  حسابات مدمجة مخفية — تظهر في التحديد والتشغيل فقط
-// ═══════════════════════════════════════
-//
-// ضعي كود RK1- الخاص بك بين علامتي الاقتباس أدناه.
-// الكود لا يظهر في واجهة الموقع، لكن سيظل موجوداً داخل ملف HTML.
-// اتركيه فارغاً لتعطيل الميزة.
-//
-// مهم: لا تضعي بيانات حساسة في ملف HTML إذا كان الملف منشوراً للعامة.
-var BUILTIN_TRANSFER_CODE = '';
-
-function loadBuiltinTransferData() {
-    var code = (BUILTIN_TRANSFER_CODE || '').trim();
-    if (!code) return 0;
-
-    code = code.replace(/^\s+/, '');
-    if (code.indexOf('RK1-') !== 0) {
-        console.warn('BUILTIN_TRANSFER_CODE: يجب أن يبدأ بـ RK1-');
-        return 0;
-    }
-
-    var json = base64ToUtf8(code.substring(4));
-    if (!json) {
-        console.warn('BUILTIN_TRANSFER_CODE: الكود غير صالح أو غير مكتمل');
-        return 0;
-    }
-
-    var data;
-    try {
-        data = JSON.parse(json);
-    } catch (e) {
-        console.warn('BUILTIN_TRANSFER_CODE: تعذر تحليل JSON');
-        return 0;
-    }
-
-    if (!data || !Array.isArray(data.bots)) return 0;
-
-    var added = 0;
-
-    for (var bi = 0; bi < data.bots.length; bi++) {
-        var srcBot = data.bots[bi];
-        if (!srcBot || !srcBot.token) continue;
-
-        // منع التكرار إذا تم استدعاء الدالة أكثر من مرة.
-        var duplicate = accounts.some(function(existing) {
-            return existing._builtin && existing._builtinSourceIndex === bi;
-        });
-        if (duplicate) continue;
-
-        var channels = [];
-        if (Array.isArray(srcBot.channels)) {
-            for (var ci = 0; ci < srcBot.channels.length; ci++) {
-                var ch = srcBot.channels[ci];
-                channels.push({
-                    slug: ch.slug,
-                    messages: ch.messages || '',
-                    interval: ch.interval || 5,
-                    repeat: ch.repeat || 1,
-                    isInfinite: !!ch.isInfinite,
-                    enabled: ch.enabled !== false,
-                    randomDelay: !!ch.randomDelay,
-                    delayMin: ch.delayMin || 3,
-                    delayMax: ch.delayMax || 7,
-                    randomMessages: !!ch.randomMessages,
-                    chatroomId: ch.chatroomId || null,
-                    verified: !!ch.verified,
-                    twoMessages: !!ch.twoMessages,
-                    fourMessages: !!ch.fourMessages,
-                    stickersOnly: !!ch.stickersOnly,
-                    status: 'idle',
-                    sent: 0,
-                    error: '',
-                    retries: 0
-                });
-            }
-        }
-
-        // إعطاء الحساب المدمج ID جديداً حتى لا يتعارض مع حسابات المستخدم.
-        var botId = ++accIdCounter;
-        while (findBot(botId)) botId = ++accIdCounter;
-
-        var bot = {
-            id: botId,
-            token: srcBot.token,
-            username: srcBot.username || 'Builtin',
-            channels: channels,
-            autoRecover: (srcBot.autoRecover !== false),
-            parallel: (srcBot.parallel !== false),
-            isSending: false,
-            sent: 0,
-            workingProxy: (typeof srcBot.workingProxy === 'number' && srcBot.workingProxy >= 0) ? srcBot.workingProxy : -1,
-            workingSendProxy: -1,
-            unified: srcBot.unified ? {
-                enabled: !!srcBot.unified.enabled,
-                messages: srcBot.unified.messages || '',
-                interval: srcBot.unified.interval || 5,
-                repeat: srcBot.unified.repeat || 1,
-                isInfinite: srcBot.unified.isInfinite !== false,
-                randomDelay: srcBot.unified.randomDelay !== false,
-                delayMin: srcBot.unified.delayMin || 240,
-                delayMax: srcBot.unified.delayMax || 300,
-                randomMessages: !!srcBot.unified.randomMessages
-            } : (data.unifiedSettings ? {
-                enabled: !!data.unifiedSettings.enabled,
-                messages: data.unifiedSettings.messages || '',
-                interval: data.unifiedSettings.interval || 5,
-                repeat: data.unifiedSettings.repeat || 1,
-                isInfinite: data.unifiedSettings.isInfinite !== false,
-                randomDelay: data.unifiedSettings.randomDelay !== false,
-                delayMin: data.unifiedSettings.delayMin || 240,
-                delayMax: data.unifiedSettings.delayMax || 300,
-                randomMessages: !!data.unifiedSettings.randomMessages
-            } : defaultUnified()),
-            _builtin: true,
-            _builtinSourceIndex: bi
-        };
-
-        accounts.push(bot);
-        added++;
-    }
-
-    return added;
-}
-
 // ═══════════════════════════════════════
 //  التهيئة
 // ═══════════════════════════════════════
@@ -4764,11 +4671,6 @@ async function init() {
     detectMode();
     loadBestProxy(); // ✅ استعادة البروكسي الأفضل من الجلسة السابقة
     loadFromStorage();
-
-    // تحميل الحسابات المدمجة في الكود: مخفية من القائمة، لكنها تدخل في "تحديد الكل"
-    // وتعمل عند الضغط على "تشغيل المحددة".
-    loadBuiltinTransferData();
-
     loadSendToNonLive(); // ✅ استعادة حالة زر الإرسال لغير المباشر
     setToggle('tgSendNonLive', sendToNonLive); // ✅ ضبط الزر في الترويسة
     try { NetworkGuard.start(); } catch(e) {}
@@ -5117,6 +5019,11 @@ document.addEventListener('keydown', function(e) {
 });
 
 init();
+
+// إعادة تحميل الصفحة كل 24 ساعة
+setInterval(() => {
+    location.reload();
+}, 24 * 60 * 60 * 1000);
 
 </script>
 
